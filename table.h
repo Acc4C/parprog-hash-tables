@@ -20,8 +20,6 @@ Table *createTable(int msize);
 KeySpace *getItemsByKey(Table *table, unsigned int key, Status *err);
 KeySpace *getItemsByKeyAndVersion(Table *table, unsigned int key, int version, Status *err);
 void freeTable(Table *table);
-Table *importFromFile(char *path, Status *err);
-Status exportInFile(Table *table, char *path);
 Status insertItem(Table *table, unsigned int key, char *info);
 void freeKeySpaceArray(KeySpace *array);
 Status delItems(Table *table, unsigned int key);

@@ -71,33 +71,3 @@ Status dialogGetItemsByKeyAndVersion(Table *table){
     }
     return err;
 }
-
-Status dialogImportFromFile(Table **table){
-    Status err;
-    char *path;
-    printf("Введите путь к файлу: ");
-    path = getStr(&err);
-    if (err != OK){ return err; }
-    Table *newTable = importFromFile(path, &err);
-    free(path);
-    if (err == OK){
-        freeTable(*table);
-        *table = newTable;
-        printf("Импортирована таблица из %ld ячейки(-ек)\n", (*table) -> msize);
-    }
-    return err;
-}
-
-Status dialogExportInFile(Table *table){
-    Status err;
-    char *path;
-    printf("Введите путь к файлу: ");
-    path = getStr(&err);
-    if (err != OK){ return err; }
-    err = exportInFile(table, path);
-    if (err == OK){
-        printf("Таблица экспортирована в файл \"%s\"\n", path);
-    }
-    free(path);
-    return err;
-}

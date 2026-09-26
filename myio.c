@@ -98,9 +98,6 @@ void printError(Status err){
         case ERR_INCORRECT_INPUT:
             printf("Некорректный ввод\n");
             break;
-        case ERR_FILE_NOT_FOUND:
-            printf("Файл не найден\n");
-            break;
         case ERR_NOT_PRIME_NUMBER:
             printf("Нужно ввести простое число\n");
     }

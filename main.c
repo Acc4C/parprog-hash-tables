@@ -37,10 +37,8 @@ int main(){
         printf("  2) Удалить элементы по ключу\n");
         printf("  3) Найти элементы по ключу\n");
         printf("  4) Вывести таблицу\n");
-        printf("  5) Импортировать данные из бинарного файла\n");
-        printf("  6) Экспортировать данные в бинарный файл\n");
-        printf("  7) Найти элементы по ключу и номеру версии\n");
-        printf("  8) Выход\n");
+        printf("  5) Найти элементы по ключу и номеру версии\n");
+        printf("  6) Выход\n");
         printf("Введите цифру: ");
         err = getInt(&choise);
         if (err == END_OF_FILE){
@@ -65,15 +63,9 @@ int main(){
                 err = OK;
                 break;
             case 5:
-                err = dialogImportFromFile(&table);
-                break;
-            case 6:
-                err = dialogExportInFile(table);
-                break;
-            case 7:
                 err = dialogGetItemsByKeyAndVersion(table);
                 break;
-            case 8:
+            case 6:
                 freeTable(table);
                 return 0;
             default:
