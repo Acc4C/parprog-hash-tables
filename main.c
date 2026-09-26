@@ -12,22 +12,23 @@ int isSimple(int n){
 }
 
 int main(){
-    int choise, err;
+    int choise;
+    Status err;
     size_t msize;
     printf("Введите количество ячеек таблицы: ");
     err = getSize_t(&msize);
-    while (err == 4 || (err == 0 && (msize < 1 || !isSimple(msize)))){
-        if (err == 0 && !isSimple(msize)){ printError(6); }
-        else { printError(4); }
+    while (err == ERR_INCORRECT_INPUT || (err == OK && (msize < 1 || !isSimple(msize)))){
+        if (err == OK && !isSimple(msize)){ printError(ERR_NOT_PRIME_NUMBER); }
+        else { printError(ERR_INCORRECT_INPUT); }
         printf("Введите количество ячеек таблицы: ");
         err = getSize_t(&msize);
     }
-    if (err == -1){
+    if (err == END_OF_FILE){
         return 0;
     }
     Table *table = createTable(msize);
     if (table == NULL){
-        printError(1);
+        printError(ERR_MEMORY_ERROR);
         return 0;
     }
     while (1){
@@ -42,10 +43,10 @@ int main(){
         printf("  8) Выход\n");
         printf("Введите цифру: ");
         err = getInt(&choise);
-        if (err == -1){
+        if (err == END_OF_FILE){
             break;
-        } else if (err != 0 || choise > 8 || choise < 1){
-            printError(4);
+        } else if (err != OK || choise > 8 || choise < 1){
+            printError(ERR_INCORRECT_INPUT);
             printf("\n");
             continue;
         }
@@ -61,7 +62,7 @@ int main(){
                 break;
             case 4:
                 printTable(table);
-                err = 0;
+                err = OK;
                 break;
             case 5:
                 err = dialogImportFromFile(&table);
@@ -76,11 +77,11 @@ int main(){
                 freeTable(table);
                 return 0;
             default:
-                err = 4;
+                err = ERR_INCORRECT_INPUT;
         }
         printError(err);
         printf("\n");
-        if (err == 1 || err == -1){ break; }
+        if (err == ERR_MEMORY_ERROR || err == END_OF_FILE){ break; }
     }
     freeTable(table);
     return 0;

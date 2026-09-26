@@ -5,11 +5,11 @@
 #include "myio.h"
 #define BLOCK 30
 
-char *getStr(int *err){
+char *getStr(Status *err){
     int blockCount = 0;
     char *result = (char*)malloc(sizeof(char)*(BLOCK + 1));
     if (result == NULL){
-        *err = 1;
+        *err = ERR_MEMORY_ERROR;
         return NULL;
     }
     result[0] = '\0';
@@ -19,77 +19,89 @@ char *getStr(int *err){
         blockCount += 1;
         result = (char*)realloc(result, sizeof(char)*(BLOCK*(blockCount + 1) + 1));
         if (result == NULL){
-            *err = 1;
+            *err = ERR_MEMORY_ERROR;
             return NULL;
         }
         *err = scanf("%30[^ \t\n]", result + BLOCK*blockCount);
     }
-    if (*err == -1){
+    if (*err == END_OF_FILE){
         free(result);
         return NULL;
     }
     result = (char*)realloc(result, sizeof(char)*(strlen(result) + 1));
     if (result == NULL){
-        *err = 1;
+        *err = ERR_MEMORY_ERROR;
         return NULL;
     }
-    *err = 0;
+    *err = OK;
     return result;
 }
 
-int getInt(int *result){
+Status getInt(int *result){
     int err = scanf("%d", result);
     if (err != 1){
         scanf("\n");
         scanf("%*[^\n]");
     }
-    if (err == 0){ err = 4; }
-    else if (err == 1){ err = 0; }
-    return err;
+    if (err == 0){
+        return ERR_INCORRECT_INPUT;
+    } else if (err == 1){
+        return OK;
+    } else{
+        return END_OF_FILE;
+    }
 }
 
-int getUnsignedInt(unsigned int *result){
+Status getUnsignedInt(unsigned int *result){
     int err = scanf("%u", result);
     if (err != 1){
         scanf("\n");
         scanf("%*[^\n]");
     }
-    if (err == 0){ err = 4; }
-    else if (err == 1){ err = 0; }
-    return err;
+    if (err == 0){
+        return ERR_INCORRECT_INPUT;
+    } else if (err == 1){
+        return OK;
+    } else{
+        return END_OF_FILE;
+    }
 }
 
-int getSize_t(size_t *result){
+Status getSize_t(size_t *result){
     int err = scanf("%zu", result);
     if (err != 1){
         scanf("\n");
         scanf("%*[^\n]");
     }
-    if (err == 0){ err = 4; }
-    else if (err == 1){ err = 0; }
-    return err;
+    if (err == 0){
+        return ERR_INCORRECT_INPUT;
+    } else if (err == 1){
+        return OK;
+    } else{
+        return END_OF_FILE;
+    }
 }
 
-void printError(int err){
+void printError(Status err){
     switch (err){
-        case 0:
+        case OK:
             break;
-        case 1:
+        case ERR_MEMORY_ERROR:
             printf("Memory error\n");
             break;
-        case 2:
+        case ERR_NOT_FOUND_BY_KEY_AND_VERSION:
             printf("Элемента с таким ключём и номером версии не существует\n");
             break;
-        case 3:
+        case ERR_NOT_FOUND_BY_KEY:
             printf("Элементов с таким ключём не существует\n");
             break;
-        case 4:
+        case ERR_INCORRECT_INPUT:
             printf("Некорректный ввод\n");
             break;
-        case 5:
+        case ERR_FILE_NOT_FOUND:
             printf("Файл не найден\n");
             break;
-        case 6:
+        case ERR_NOT_PRIME_NUMBER:
             printf("Нужно ввести простое число\n");
     }
 }

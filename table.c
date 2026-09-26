@@ -94,7 +94,7 @@ int insertItem(Table *table, unsigned int key, char *info){
             item -> busy = 1;
             item -> key = key;
             char *newInfo = (char*)malloc(sizeof(char)*(strlen(info) + 1));
-            if (newInfo == NULL){ return 1; }
+            if (newInfo == NULL){ return ERR_MEMORY_ERROR; }
             strcpy(newInfo, info);
             item -> info = newInfo;
             table -> csize += 1;
@@ -104,11 +104,11 @@ int insertItem(Table *table, unsigned int key, char *info){
         index = hash(key, viewed, table -> msize);
     }
     if (table -> csize < (table -> msize)){
-        return 0;
+        return OK;
     }
     size_t newMsize = getNewMsize(table -> msize);
     KeySpace *newKS = (KeySpace*)calloc(newMsize, sizeof(KeySpace));
-    if (newKS == NULL){ return 1; }
+    if (newKS == NULL){ return ERR_MEMORY_ERROR; }
     for (int index = 0; index < (table -> msize); index++){
         item = firstItem + index;
         if (item -> busy == 1){
@@ -118,7 +118,7 @@ int insertItem(Table *table, unsigned int key, char *info){
     free(table -> ks);
     table -> ks = newKS;
     table -> msize = newMsize;
-    return 0;
+    return OK;
 }
 
 void freeKeySpaceArray(KeySpace *array){
@@ -126,11 +126,11 @@ void freeKeySpaceArray(KeySpace *array){
     free(array);
 }
 
-KeySpace *getItemsByKey(Table *table, unsigned int key, int *err){
+KeySpace *getItemsByKey(Table *table, unsigned int key, Status *err){
     KeySpace *firstItem = (table -> ks);
     KeySpace *itemArray = (KeySpace*)malloc(sizeof(KeySpace)*(table -> csize + 1));
     if (itemArray == NULL){
-        *err = 1;
+        *err = ERR_MEMORY_ERROR;
         return NULL;
     }
     int length = 0, viewed = 0;
@@ -143,7 +143,7 @@ KeySpace *getItemsByKey(Table *table, unsigned int key, int *err){
             if (itemArray[length].info == NULL){
                 for (; length > 0; length--){ free(itemArray[length - 1].info); }
                 free(itemArray);
-                *err = 1;
+                *err = ERR_MEMORY_ERROR;
                 return NULL;
             }
             strcpy(itemArray[length].info, item -> info);
@@ -154,21 +154,21 @@ KeySpace *getItemsByKey(Table *table, unsigned int key, int *err){
         item = firstItem + index;
     }
     if (length == 0){
-        *err = 3;
+        *err = ERR_NOT_FOUND_BY_KEY;
         free(itemArray);
         return NULL;
     }
     itemArray[length].info = NULL;
     itemArray = (KeySpace*)realloc(itemArray, sizeof(KeySpace)*(length + 1));
     if (itemArray == NULL){
-        *err = 1;
+        *err = ERR_MEMORY_ERROR;
         return NULL;
     }
-    *err = 0;
+    *err = OK;
     return itemArray;
 }
 
-KeySpace *getItemsByKeyAndVersion(Table *table, unsigned int key, int version, int *err){
+KeySpace *getItemsByKeyAndVersion(Table *table, unsigned int key, int version, Status *err){
     if (version == 0){ return getItemsByKey(table, key, err); }
     KeySpace* itemArray = getItemsByKey(table, key, err);
     if (*err){ return NULL; }
@@ -180,40 +180,40 @@ KeySpace *getItemsByKeyAndVersion(Table *table, unsigned int key, int version, i
             itemArray[1].info = NULL;
             itemArray = (KeySpace*)realloc(itemArray, sizeof(KeySpace)*2);
             if (itemArray == NULL){
-                *err = 1;
+                *err = ERR_MEMORY_ERROR;
                 return NULL;
             }
-            *err = 0;
+            *err = OK;
             return itemArray;
         }
     }
     for (KeySpace *item = itemArray; item -> info != NULL; item++){ free(item -> info); }
     free(itemArray);
-    *err = 2;
+    *err = ERR_NOT_FOUND_BY_KEY_AND_VERSION;
     return NULL;
 }
 
-Table *importFromFile(char *path, int *err){
+Table *importFromFile(char *path, Status *err){
     FILE *file = fopen(path, "rb");
     int length;
     size_t msize;
     if (file == NULL){
-        *err = 5;
+        *err = ERR_FILE_NOT_FOUND;
         return NULL;
     }
     if (fread(&msize, sizeof(size_t), 1, file) != 1){
-        *err = 4;
+        *err = ERR_INCORRECT_INPUT;
         fclose(file);
         return NULL;
     }
     Table *newTable = createTable(msize);
     if (newTable == NULL){
-        *err = 1;
+        *err = ERR_MEMORY_ERROR;
         fclose(file);
         return NULL;
     }
     if (fread(&(newTable -> csize), sizeof(size_t), 1, file) != 1){
-        *err = 4;
+        *err = ERR_INCORRECT_INPUT;
         fclose(file);
         freeTable(newTable);
         return NULL;
@@ -223,7 +223,7 @@ Table *importFromFile(char *path, int *err){
         for (int index = 0; index < (newTable -> msize); index++){ (ks + index) -> busy = 0; }
         fclose(file);
         freeTable(newTable);
-        *err = 4;
+        *err = ERR_INCORRECT_INPUT;
         return NULL;
     }
     for (int index = 0; index < (newTable -> msize); index++){
@@ -232,7 +232,7 @@ Table *importFromFile(char *path, int *err){
                 for (; index < (newTable -> msize); index++){ (ks + index) -> busy = 0; }
                 fclose(file);
                 freeTable(newTable);
-                *err = 4;
+                *err = ERR_INCORRECT_INPUT;
                 return NULL;
             }
             (ks + index) -> info = (char*)malloc(sizeof(char)*length);
@@ -240,14 +240,14 @@ Table *importFromFile(char *path, int *err){
                 for (; index < (newTable -> msize); index++){ (ks + index) -> busy = 0; }
                 fclose(file);
                 freeTable(newTable);
-                *err = 1;
+                *err = ERR_MEMORY_ERROR;
                 return NULL;
             }
             if (fread((ks + index) -> info, sizeof(char), length, file) != length){
                 for (index += 1; index < (newTable -> msize); index++){ (ks + index) -> busy = 0; }
                 fclose(file);
                 freeTable(newTable);
-                *err = 4;
+                *err = ERR_INCORRECT_INPUT;
                 return NULL;
             }
         }
@@ -256,10 +256,10 @@ Table *importFromFile(char *path, int *err){
     return newTable;
 }
 
-int exportInFile(Table *table, char *path){
+Status exportInFile(Table *table, char *path){
     FILE *file = fopen(path, "wb");
     int length;
-    if (file == NULL){ return 5; }
+    if (file == NULL){ return ERR_FILE_NOT_FOUND; }
     fwrite(&(table -> msize), sizeof(size_t), 1, file);
     fwrite(&(table -> csize), sizeof(size_t), 1, file);
     fwrite(table -> ks, sizeof(KeySpace), table -> msize, file);
@@ -271,14 +271,17 @@ int exportInFile(Table *table, char *path){
         }
     }
     fclose(file);
-    return 0;
+    return OK;
 }
 
-int delItems(Table *table, unsigned int key){
+Status delItems(Table *table, unsigned int key){
     KeySpace *firstItem = (table -> ks);
     int viewed = 0;
     int index = hash(key, viewed, table -> msize);
     KeySpace *item = firstItem + index;
+    if (item -> busy == 0){
+        return ERR_NOT_FOUND_BY_KEY;
+    }
     while ((item -> busy != 0) && (viewed < (table -> msize))){
         if ((item -> busy == 1) && (item -> key == key)){
             free(item -> info);
@@ -289,7 +292,7 @@ int delItems(Table *table, unsigned int key){
         index = hash(key, viewed, table -> msize);
         item = firstItem + index;
     }
-    return 0;
+    return OK;
 }
 
 void freeTable(Table *table){
