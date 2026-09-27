@@ -1,5 +1,5 @@
-build: obj bin obj/main.o obj/dialog.o obj/myio.o obj/table.o
-	gcc obj/main.o obj/dialog.o obj/myio.o obj/table.o -o bin/main
+build/dialog: obj bin obj/main_dialog.o obj/dialog.o obj/myio.o obj/table.o
+	gcc obj/main_dialog.o obj/dialog.o obj/myio.o obj/table.o -o bin/main
 
 obj:
 	mkdir obj
@@ -7,8 +7,8 @@ obj:
 bin:
 	mkdir bin
 
-obj/main.o:
-	gcc -c main.c -o obj/main.o
+obj/main_dialog.o:
+	gcc -c main_dialog.c -o obj/main_dialog.o
 
 obj/dialog.o:
 	gcc -c dialog.c -o obj/dialog.o
