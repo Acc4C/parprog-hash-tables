@@ -43,6 +43,7 @@ Status dialogGetItem(Table *table){
     char *val = getItem(table, key, &err);
     if (err == OK){
         printf("Элемент с ключём %u: \"%s\"\n", key, val);
+        free(val);
     }
     return err;
 }
