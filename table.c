@@ -3,11 +3,22 @@
 #include "table.h"
 #include "myio.h"
 
-int hash1(unsigned int key, size_t msize){ return key%msize; }
+unsigned int helper(char *key){
+    unsigned int res = 1;
+    for (char *str = key; *str != 0; str++){
+        res = res * 31 + (unsigned char)(*str);
+    }
+    return res;
+}
 
-int hash2(unsigned int key, size_t msize){ return 1 + (key*key)%(msize - 1); }
+int hash1(char *key, size_t msize){ return helper(key)%msize; }
 
-int hash(unsigned int key, int i, size_t msize){ return (hash1(key, msize) + i*hash2(key, msize))%msize; }
+int hash2(char *key, size_t msize){
+    unsigned int helperVal = helper(key);
+    return 1 + (helperVal*helperVal)%(msize - 1);
+}
+
+int hash(char *key, int i, size_t msize){ return (hash1(key, msize) + i*hash2(key, msize))%msize; }
 
 Table *createTable(int msize){
     Table *newTable = (Table*)malloc(sizeof(Table));
@@ -23,13 +34,14 @@ Table *createTable(int msize){
     return newTable;
 }
 
-char *getItem(Table* table, unsigned int key, Status *err){
+char *getItem(Table* table, char *key, Status *err){
     int viewed = 0;
     int index = hash(key, viewed, table -> msize);
     KeySpace *firstItem = (table -> ks);
-    while (((firstItem + index) -> busy != 0) && (viewed < (table -> msize))){
-        if (((firstItem + index) -> busy == 1) && ((firstItem + index) -> key == key)){
-            char *info = (firstItem + index) -> info;
+    KeySpace *item = firstItem + index; 
+    while ((item -> busy != 0) && (viewed < (table -> msize))){
+        if ((item -> busy == 1) && strcmp(item -> key, key) == 0){
+            char *info = item -> info;
             char *res = (char*)malloc(sizeof(char)*(strlen(info) + 1));
             if (res == NULL){
                 *err = ERR_MEMORY_ERROR;
@@ -41,6 +53,7 @@ char *getItem(Table* table, unsigned int key, Status *err){
         }
         viewed++;
         index = hash(key, viewed, table -> msize);
+        item = firstItem + index;
     }
     *err = ERR_NOT_FOUND;
     return NULL;
@@ -92,7 +105,7 @@ Status expandTable(Table *table){
     return OK;
 }
 
-Status insertItem(Table *table, unsigned int key, char *info){
+Status insertItem(Table *table, char *key, char *info){
     if (table -> csize == (table -> msize)){
         Status err = expandTable(table);
         if (err != OK){
@@ -106,7 +119,7 @@ Status insertItem(Table *table, unsigned int key, char *info){
     int indexForInsert = -1, indexForDelete = -1, delta = 1;
     while (viewed < (table -> msize)){
         item = firstItem + index;
-        if (item -> busy != 1 || item -> key == key){
+        if (item -> busy != 1 || strcmp(item -> key, key) == 0){
             indexForInsert = (indexForInsert == -1)?index:indexForInsert;
             if (item -> busy == 1){
                 indexForDelete = index;
@@ -121,31 +134,39 @@ Status insertItem(Table *table, unsigned int key, char *info){
     if (indexForInsert == -1){
         return ERR_NOT_FOUND;
     }
+    char *newKey = (char*)malloc(sizeof(char)*(strlen(key) + 1));
+    if (newKey == NULL){ return ERR_MEMORY_ERROR; }
+    strcpy(newKey, key);
     char *newInfo = (char*)malloc(sizeof(char)*(strlen(info) + 1));
-    if (newInfo == NULL){ return ERR_MEMORY_ERROR; }
+    if (newInfo == NULL){
+        free(newKey);
+        return ERR_MEMORY_ERROR;
+    }
     strcpy(newInfo, info);
     if (indexForDelete != -1){
         item = firstItem + indexForDelete;
+        free(item -> key);
         free(item -> info);
         item -> busy = -1;
         delta = 0;
     }
     item = firstItem + indexForInsert;
     item -> busy = 1;
-    item -> key = key;
+    item -> key = newKey;
     item -> info = newInfo;
     table -> csize += delta;
     return OK;
 }
 
-Status delItem(Table *table, unsigned int key){
+Status delItem(Table *table, char *key){
     KeySpace *firstItem = (table -> ks);
     int viewed = 0;
     int index = hash(key, viewed, table -> msize);
     KeySpace *item = firstItem + index;
     int deleted = 0;
     while ((item -> busy != 0) && (viewed < (table -> msize))){
-        if ((item -> busy == 1) && (item -> key == key)){
+        if ((item -> busy == 1) && strcmp(item -> key, key) == 0){
+            free(item -> key);
             free(item -> info);
             item -> busy = -1;
             table -> csize -= 1;
@@ -165,7 +186,10 @@ Status delItem(Table *table, unsigned int key){
 void freeTable(Table *table){
     KeySpace *lastItem = (table -> ks + (table -> msize));
     for (KeySpace *item = table -> ks; item != lastItem; item++){
-        if (item -> busy == 1){ free(item -> info); }
+        if (item -> busy == 1){
+            free(item -> key);
+            free(item -> info);
+        }
     }
     free(table -> ks);
     free(table);

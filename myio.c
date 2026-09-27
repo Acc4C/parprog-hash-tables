@@ -52,21 +52,6 @@ Status getInt(int *result){
     }
 }
 
-Status getUnsignedInt(unsigned int *result){
-    int err = scanf("%u", result);
-    if (err != 1){
-        scanf("\n");
-        scanf("%*[^\n]");
-    }
-    if (err == 0){
-        return ERR_INCORRECT_INPUT;
-    } else if (err == 1){
-        return OK;
-    } else{
-        return END_OF_FILE;
-    }
-}
-
 Status getSize_t(size_t *result){
     int err = scanf("%zu", result);
     if (err != 1){
@@ -105,10 +90,10 @@ void printTable(Table *table){
         printf("В таблице нет элементов\n");
         return;
     }
-    printf("busy   key      info\n");
+    printf("busy   key          info\n");
     KeySpace *lastItem = (table -> ks + (table -> msize));
     for (KeySpace *item = (table -> ks); item != lastItem; item++){
-        if (item -> busy == 1){ printf("1      %-8u %s\n", item -> key, item -> info); }
+        if (item -> busy == 1){ printf("1      %-12s %s\n", item -> key, item -> info); }
         else{ printf("%-6d ...      ...\n", item -> busy); }
     }
 }
