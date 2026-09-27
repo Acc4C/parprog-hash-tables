@@ -75,34 +75,8 @@ void putItem(KeySpace* ks, KeySpace newItem, size_t msize){
     }
 }
 
-int insertItem(Table *table, unsigned int key, char *info){
-    int viewed = 0;
-    int index = hash(key, viewed, table -> msize);
-    KeySpace *firstItem = (table -> ks);
-    KeySpace *item;
-    while (viewed < (table -> msize)){
-        item = firstItem + index;
-        if (item -> busy != 1 || item -> key == key){
-            int delta = 1;
-            if (item -> busy == 1){
-                free(item -> info);
-                delta = 0;
-            }
-            item -> busy = 1;
-            item -> key = key;
-            char *newInfo = (char*)malloc(sizeof(char)*(strlen(info) + 1));
-            if (newInfo == NULL){ return ERR_MEMORY_ERROR; }
-            strcpy(newInfo, info);
-            item -> info = newInfo;
-            table -> csize += delta;
-            break;
-        }
-        viewed++;
-        index = hash(key, viewed, table -> msize);
-    }
-    if (table -> csize < (table -> msize)){
-        return OK;
-    }
+Status expandTable(Table *table){
+    KeySpace *firstItem = (table -> ks), *item;
     size_t newMsize = getNewMsize(table -> msize);
     KeySpace *newKS = (KeySpace*)calloc(newMsize, sizeof(KeySpace));
     if (newKS == NULL){ return ERR_MEMORY_ERROR; }
@@ -115,6 +89,52 @@ int insertItem(Table *table, unsigned int key, char *info){
     free(table -> ks);
     table -> ks = newKS;
     table -> msize = newMsize;
+    return OK;
+}
+
+Status insertItem(Table *table, unsigned int key, char *info){
+    if (table -> csize == (table -> msize)){
+        Status err = expandTable(table);
+        if (err != OK){
+            return err;
+        }
+    }
+    int viewed = 0;
+    int index = hash(key, viewed, table -> msize);
+    KeySpace *firstItem = (table -> ks);
+    KeySpace *item;
+    int indexForInsert = -1, indexForDelete = -1, delta = 1;
+    while (viewed < (table -> msize)){
+        item = firstItem + index;
+        if (item -> busy != 1 || item -> key == key){
+            indexForInsert = (indexForInsert == -1)?index:indexForInsert;
+            if (item -> busy == 1){
+                indexForDelete = index;
+            }
+            if (item -> busy != -1){
+                break;
+            }
+        }
+        viewed++;
+        index = hash(key, viewed, table -> msize);
+    }
+    if (indexForInsert == -1){
+        return ERR_NOT_FOUND;
+    }
+    char *newInfo = (char*)malloc(sizeof(char)*(strlen(info) + 1));
+    if (newInfo == NULL){ return ERR_MEMORY_ERROR; }
+    strcpy(newInfo, info);
+    if (indexForDelete != -1){
+        item = firstItem + indexForDelete;
+        free(item -> info);
+        item -> busy = -1;
+        delta = 0;
+    }
+    item = firstItem + indexForInsert;
+    item -> busy = 1;
+    item -> key = key;
+    item -> info = newInfo;
+    table -> csize += delta;
     return OK;
 }
 
