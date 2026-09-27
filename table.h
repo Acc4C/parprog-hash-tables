@@ -6,7 +6,6 @@
 typedef struct KeySpace {
     int busy;
     unsigned int key;
-    int release;
     char *info;
 } KeySpace;
 
@@ -17,11 +16,9 @@ typedef struct Table {
 } Table;
 
 Table *createTable(int msize);
-KeySpace *getItemsByKey(Table *table, unsigned int key, Status *err);
-KeySpace *getItemsByKeyAndVersion(Table *table, unsigned int key, int version, Status *err);
+char *getItem(Table *table, unsigned int key, Status *err);
 void freeTable(Table *table);
 Status insertItem(Table *table, unsigned int key, char *info);
-void freeKeySpaceArray(KeySpace *array);
-Status delItems(Table *table, unsigned int key);
+Status delItem(Table *table, unsigned int key);
 
 #endif

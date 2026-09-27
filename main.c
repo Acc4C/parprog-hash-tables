@@ -37,11 +37,10 @@ int main(){
     while (1){
         printf("Выберите действие:\n");
         printf("  1) Вставить элемент в таблицу\n");
-        printf("  2) Удалить элементы по ключу\n");
-        printf("  3) Найти элементы по ключу\n");
+        printf("  2) Удалить элемент по ключу\n");
+        printf("  3) Найти элемент по ключу\n");
         printf("  4) Вывести таблицу\n");
-        printf("  5) Найти элементы по ключу и номеру версии\n");
-        printf("  6) Выход\n");
+        printf("  5) Выход\n");
         printf("Введите цифру: ");
         err = getInt(&choise);
         if (err == END_OF_FILE){
@@ -56,19 +55,16 @@ int main(){
                 err = dialogInsertItem(table);
                 break;
             case 2:
-                err = dialogDelItems(table);
+                err = dialogDelItem(table);
                 break;
             case 3:
-                err = dialogGetItemsByKey(table);
+                err = dialogGetItem(table);
                 break;
             case 4:
                 printTable(table);
                 err = OK;
                 break;
             case 5:
-                err = dialogGetItemsByKeyAndVersion(table);
-                break;
-            case 6:
                 freeTable(table);
                 return 0;
             default:

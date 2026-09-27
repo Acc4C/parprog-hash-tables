@@ -89,11 +89,8 @@ void printError(Status err){
         case ERR_MEMORY_ERROR:
             printf("Memory error\n");
             break;
-        case ERR_NOT_FOUND_BY_KEY_AND_VERSION:
-            printf("Элемента с таким ключём и номером версии не существует\n");
-            break;
-        case ERR_NOT_FOUND_BY_KEY:
-            printf("Элементов с таким ключём не существует\n");
+        case ERR_NOT_FOUND:
+            printf("Элемента с таким ключём не существует\n");
             break;
         case ERR_INCORRECT_INPUT:
             printf("Некорректный ввод\n");
@@ -103,26 +100,15 @@ void printError(Status err){
     }
 }
 
-void printKeySpaceArray(KeySpace *array){
-    if (array -> info == NULL){
-        printf("Список пуст\n");
-        return;
-    }
-    printf("key      release    info\n");
-    for (KeySpace *item = array; item -> info != NULL; item++){
-        if (item -> busy == 1){ printf("%-8u %-10d %s\n", item -> key, item -> release, item -> info); }
-    }
-}
-
 void printTable(Table *table){
     if (table -> csize == 0){
         printf("В таблице нет элементов\n");
         return;
     }
-    printf("busy   key      release    info\n");
+    printf("busy   key      info\n");
     KeySpace *lastItem = (table -> ks + (table -> msize));
     for (KeySpace *item = (table -> ks); item != lastItem; item++){
-        if (item -> busy == 1){ printf("1      %-8u %-10d %s\n", item -> key, item -> release, item -> info); }
-        else{ printf("%-6d ...      ...        ...\n", item -> busy); }
+        if (item -> busy == 1){ printf("1      %-8u %s\n", item -> key, item -> info); }
+        else{ printf("%-6d ...      ...\n", item -> busy); }
     }
 }

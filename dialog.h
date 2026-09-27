@@ -4,8 +4,7 @@
 #include "status.h"
 
 Status dialogInsertItem(Table *table);
-Status dialogDelItems(Table *table);
-Status dialogGetItemsByKey(Table *table);
-Status dialogGetItemsByKeyAndVersion(Table* table);
+Status dialogDelItem(Table *table);
+Status dialogGetItem(Table *table);
 
 #endif

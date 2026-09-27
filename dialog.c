@@ -23,51 +23,26 @@ Status dialogInsertItem(Table *table){
     return OK;
 }
 
-Status dialogDelItems(Table *table){
+Status dialogDelItem(Table *table){
     Status err;
     unsigned int key;
     printf("Введите ключ: ");
     err = getUnsignedInt(&key);
     if (err != OK){ return err; }
-    err = delItems(table, key);
-    if (err == OK){ printf("Злементы с ключём %u удалёны\n", key); }
+    err = delItem(table, key);
+    if (err == OK){ printf("Злемент с ключём %u удалён\n", key); }
     return err;
 }
 
-Status dialogGetItemsByKey(Table *table){
+Status dialogGetItem(Table *table){
     Status err;
     unsigned int key;
     printf("Введите ключ: ");
     err = getUnsignedInt(&key);
     if (err){ return err; }
-    KeySpace *array = getItemsByKey(table, key, &err);
+    char *val = getItem(table, key, &err);
     if (err == OK){
-        printKeySpaceArray(array);
-        freeKeySpaceArray(array);
-    }
-    return err;
-}
-
-Status dialogGetItemsByKeyAndVersion(Table *table){
-    int err, version;
-    char flag;
-    unsigned int key;
-    printf("Введите ключ и его версию: ");
-    err = getUnsignedInt(&key);
-    if (err != OK){ return err; }
-    scanf("\n");
-    err = scanf("%[*]", &flag);
-    if (err == -1){ return END_OF_FILE; }
-    if (err == 1){ version = 0; }
-    else{
-        err = getInt(&version);
-        if (err != OK){ return err; }
-        if (version < 1){ return ERR_INCORRECT_INPUT; }
-    }
-    KeySpace *array = getItemsByKeyAndVersion(table, key, version, &err);
-    if (err == OK){
-        printKeySpaceArray(array);
-        freeKeySpaceArray(array);
+        printf("Элемент с ключём %u: \"%s\"\n", key, val);
     }
     return err;
 }
