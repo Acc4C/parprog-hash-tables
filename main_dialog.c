@@ -72,7 +72,9 @@ int main(){
         }
         printError(err);
         printf("\n");
-        if (err == ERR_MEMORY_ERROR || err == END_OF_FILE){ break; }
+        if (err == ERR_MEMORY_ERROR || err == END_OF_FILE){
+            break;
+        }
     }
     freeTable(table);
     return 0;

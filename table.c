@@ -11,14 +11,18 @@ unsigned int helper(char *key){
     return res;
 }
 
-int hash1(char *key, size_t msize){ return helper(key)%msize; }
+int hash1(char *key, size_t msize){
+    return helper(key)%msize;
+}
 
 int hash2(char *key, size_t msize){
     unsigned int helperVal = helper(key);
     return 1 + (helperVal*helperVal)%(msize - 1);
 }
 
-int hash(char *key, int i, size_t msize){ return (hash1(key, msize) + i*hash2(key, msize))%msize; }
+int hash(char *key, int i, size_t msize){
+    return (hash1(key, msize) + i*hash2(key, msize))%msize;
+}
 
 Table *createTable(int msize){
     Table *newTable = (Table*)malloc(sizeof(Table));
@@ -39,8 +43,8 @@ char *getItem(Table* table, char *key, Status *err){
     int index = hash(key, viewed, table -> msize);
     KeySpace *firstItem = (table -> ks);
     KeySpace *item = firstItem + index; 
-    while ((item -> busy != 0) && (viewed < (table -> msize))){
-        if ((item -> busy == 1) && strcmp(item -> key, key) == 0){
+    while (item -> busy != 0 && viewed < (table -> msize)){
+        if (item -> busy == 1 && strcmp(item -> key, key) == 0){
             char *info = item -> info;
             char *res = (char*)malloc(sizeof(char)*(strlen(info) + 1));
             if (res == NULL){
@@ -69,7 +73,9 @@ size_t getNewMsize(size_t msize){
                 break;
             }
         }
-        if (flag){ return i; }
+        if (flag){
+            return i;
+        }
     }
 }
 
@@ -92,7 +98,9 @@ Status expandTable(Table *table){
     KeySpace *firstItem = (table -> ks), *item;
     size_t newMsize = getNewMsize(table -> msize);
     KeySpace *newKS = (KeySpace*)calloc(newMsize, sizeof(KeySpace));
-    if (newKS == NULL){ return ERR_MEMORY_ERROR; }
+    if (newKS == NULL){
+        return ERR_MEMORY_ERROR;
+    }
     for (int index = 0; index < (table -> msize); index++){
         item = firstItem + index;
         if (item -> busy == 1){
@@ -135,7 +143,9 @@ Status insertItem(Table *table, char *key, char *info){
         return ERR_NOT_FOUND;
     }
     char *newKey = (char*)malloc(sizeof(char)*(strlen(key) + 1));
-    if (newKey == NULL){ return ERR_MEMORY_ERROR; }
+    if (newKey == NULL){
+        return ERR_MEMORY_ERROR;
+    }
     strcpy(newKey, key);
     char *newInfo = (char*)malloc(sizeof(char)*(strlen(info) + 1));
     if (newInfo == NULL){
@@ -164,8 +174,8 @@ Status delItem(Table *table, char *key){
     int index = hash(key, viewed, table -> msize);
     KeySpace *item = firstItem + index;
     int deleted = 0;
-    while ((item -> busy != 0) && (viewed < (table -> msize))){
-        if ((item -> busy == 1) && strcmp(item -> key, key) == 0){
+    while (item -> busy != 0 && viewed < (table -> msize)){
+        if (item -> busy == 1 && strcmp(item -> key, key) == 0){
             free(item -> key);
             free(item -> info);
             item -> busy = -1;

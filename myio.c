@@ -93,7 +93,11 @@ void printTable(Table *table){
     printf("busy   key          info\n");
     KeySpace *lastItem = (table -> ks + (table -> msize));
     for (KeySpace *item = (table -> ks); item != lastItem; item++){
-        if (item -> busy == 1){ printf("1      %-12s %s\n", item -> key, item -> info); }
-        else{ printf("%-6d ...      ...\n", item -> busy); }
+        if (item -> busy == 1){
+            printf("1      %-12s %s\n", item -> key, item -> info);
+        }
+        else{
+            printf("%-6d ...      ...\n", item -> busy);
+        }
     }
 }

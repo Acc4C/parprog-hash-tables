@@ -9,16 +9,16 @@ Status generateKeys(char **keys, size_t count){
     char *key;
     for (int i = 0; i < count; i++){
         length = 3 + rand()%8;
-        *(keys + i) = (char*)calloc(length + 1, sizeof(char));
-        key = *(keys + i);
+        keys[i] = (char*)calloc(length + 1, sizeof(char));
+        key = keys[i];
         if (key == NULL){
             for (i -= 1; i >= 0; i--){
-                free(*(keys + i));
+                free(keys[i]);
             }
             return ERR_MEMORY_ERROR;
         }
         for (int j = 0; j < length; j++){
-            *(key + j) = 65 + rand()%58;
+            key[j] = 65 + rand()%58;
         }
     }
     return OK;
@@ -26,7 +26,7 @@ Status generateKeys(char **keys, size_t count){
 
 void clearStringArray(char **keys, size_t count){
     for (int i = 0; i < count; i++){
-        free(*(keys + i));
+        free(keys[i]);
     }
 }
 
@@ -51,7 +51,7 @@ Status benchmarkInsert(size_t msize, double *fillInTime){
         }
         start = omp_get_wtime();
         for (int j = 0; j < msize; j++){
-            err = insertItem(table, *(keys + j), *(keys + j));
+            err = insertItem(table, keys[j], keys[j]);
             if (err != OK){
                 freeTable(table);
                 clearStringArray(keys, msize);
@@ -89,7 +89,7 @@ Status benchmarkSearch(size_t msize, double *searchTime){
         return err;
     }
     for (int j = 0; j < msize/2; j++){
-        err = insertItem(table, *(keys + j), *(keys + j));
+        err = insertItem(table, keys[j], keys[j]);
         if (err != OK){
             freeTable(table);
             clearStringArray(keys, msize);
@@ -106,7 +106,7 @@ Status benchmarkSearch(size_t msize, double *searchTime){
     }
     start = omp_get_wtime();
     for (int i = 0; i < msize; i++){
-        *(vals + i) = getItem(table, *(keys + i), &err);
+        vals[i] = getItem(table, keys[i], &err);
         if (err == ERR_MEMORY_ERROR){
             freeTable(table);
             clearStringArray(keys, msize);
@@ -160,12 +160,12 @@ int main(){
     printf("fill in table benchmarks:\n");
     printf("element count   time\n");
     for (int i = 1; i < 51; i++){
-        printf("%-15d %.3fs\n", i*10000, *(tableFillInTimes + i - 1));
+        printf("%-15d %.3fs\n", i*10000, tableFillInTimes[i - 1]);
     }
     printf("search in table benchmarks:\n");
     printf("element count   time\n");
     for (int i = 1; i < 51; i++){
-        printf("%-15d %.3fmcs\n", i*10000, *(tableSearchTimes + i - 1)*1000000);
+        printf("%-15d %.3fmcs\n", i*10000, tableSearchTimes[i - 1]*1000000);
     }
     free(tableFillInTimes);
     free(tableSearchTimes);
