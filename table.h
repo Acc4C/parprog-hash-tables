@@ -17,6 +17,8 @@ typedef struct Table {
 
 Table *createTable(int msize);
 char *getItem(Table *table, char *key, Status *err);
+size_t getNewMsize(size_t msize);
+void clearTable(Table *table);
 void freeTable(Table *table);
 Status insertItem(Table *table, char *key, char *info);
 Status delItem(Table *table, char *key);

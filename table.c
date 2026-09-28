@@ -183,6 +183,19 @@ Status delItem(Table *table, char *key){
     return OK;
 }
 
+void clearTable(Table *table){
+    KeySpace *lastItem = (table -> ks + (table -> msize));
+    for (KeySpace *item = table -> ks; item != lastItem; item++){
+        if (item -> busy == 1){
+            free(item -> key);
+            free(item -> info);
+        }
+        item -> busy = 0;
+    }
+    table -> csize = 0;
+}
+
+
 void freeTable(Table *table){
     KeySpace *lastItem = (table -> ks + (table -> msize));
     for (KeySpace *item = table -> ks; item != lastItem; item++){
