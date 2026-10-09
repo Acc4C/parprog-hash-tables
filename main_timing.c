@@ -27,6 +27,7 @@ Status generateKeys(char **keys, size_t count){
 void clearStringArray(char **keys, size_t count){
     for (int i = 0; i < count; i++){
         free(keys[i]);
+        keys[i] = NULL;
     }
 }
 
