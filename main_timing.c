@@ -83,46 +83,49 @@ Status benchmarkSearch(size_t msize, double *searchTime){
         freeTable(table);
         return ERR_MEMORY_ERROR;
     }
-    err = generateKeys(keys, msize);
-    if (err != OK){
-        freeTable(table);
-        free(keys);
-        return err;
-    }
-    for (int j = 0; j < msize/2; j++){
-        err = insertItem(table, keys[j], keys[j]);
-        if (err != OK){
-            freeTable(table);
-            clearStringArray(keys, msize);
-            free(keys);
-            return err;
-        }
-    }
     char **vals = (char**)calloc(msize, sizeof(char*));
     if (vals == NULL){
         freeTable(table);
-        clearStringArray(keys, msize);
         free(keys);
         return ERR_MEMORY_ERROR;
     }
-    start = omp_get_wtime();
-    for (int i = 0; i < msize; i++){
-        vals[i] = getItem(table, keys[i], &err);
-        if (err == ERR_MEMORY_ERROR){
+    for (int k = 0; k < 100; k++){
+        err = generateKeys(keys, msize);
+        if (err != OK){
             freeTable(table);
-            clearStringArray(keys, msize);
             free(keys);
-            clearStringArray(vals, msize);
-            free(vals);
             return err;
         }
+        for (int j = 0; j < msize/2; j++){
+            err = insertItem(table, keys[j], keys[j]);
+            if (err != OK){
+                freeTable(table);
+                clearStringArray(keys, msize);
+                free(keys);
+                return err;
+            }
+        }
+        start = omp_get_wtime();
+        for (int i = 0; i < msize; i++){
+            vals[i] = getItem(table, keys[i], &err);
+            if (err == ERR_MEMORY_ERROR){
+                freeTable(table);
+                clearStringArray(keys, msize);
+                free(keys);
+                clearStringArray(vals, msize);
+                free(vals);
+                return err;
+            }
+        }
+        end = omp_get_wtime();
+        sum += end - start;
+        clearTable(table);
+        clearStringArray(keys, msize);
+        clearStringArray(vals, msize);
     }
-    end = omp_get_wtime();
-    *searchTime = (end - start)/msize;
+    *searchTime = sum/100/msize;
     freeTable(table);
-    clearStringArray(keys, msize);
     free(keys);
-    clearStringArray(vals, msize);
     free(vals);
     return OK;
 }
