@@ -33,7 +33,7 @@ void clearStringArray(char **keys, size_t count){
 Status benchmarkInsert(size_t msize, double *fillInTime){
     Status err;
     double start, end, sum = 0;
-    Table *table = createTable(getNewMsize(msize));
+    Table *table = createTable(getNewMsize(2*msize));
     if (table == NULL){
         return ERR_MEMORY_ERROR;
     }
