@@ -81,7 +81,7 @@ void putItem(KeySpace* ks, KeySpace newItem, size_t msize){
 
 Status expandTable(Table *table){
     KeySpace *firstItem = (table -> ks), *item;
-    size_t newMsize = getNewMsize(table -> msize);
+    size_t newMsize = getNewMsize(2*(table -> msize));
     KeySpace *newKS = (KeySpace*)calloc(newMsize, sizeof(KeySpace));
     if (newKS == NULL){
         return ERR_MEMORY_ERROR;
