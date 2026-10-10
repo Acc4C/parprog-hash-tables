@@ -6,59 +6,52 @@
 
 Status dialogInsertItem(Table *table){
     Status err;
-    char *key;
+    int key;
     printf("Введите ключ: ");
-    key = getStr(&err);
+    err = getInt(&key);
     if (err){
         return err;
     }
     printf("Введите значение элемента: ");
-    char *info = getStr(&err);
+    int info;
+    err = getInt(&info);
     if (err){
-        free(key);
         return err;
     }
     err = insertItem(table, key, info);
     if (err != OK){
-        free(key);
-        free(info);
         return err;
     }
-    printf("Добавлен элемент с ключём \"%s\" и значением \"%s\"\n", key, info);
-    free(key);
-    free(info);
+    printf("Добавлен элемент с ключём %d и значением %d\n", key, info);
     return OK;
 }
 
 Status dialogDelItem(Table *table){
     Status err;
-    char *key;
+    int key;
     printf("Введите ключ: ");
-    key = getStr(&err);
+    err = getInt(&key);
     if (err != OK){
         return err;
     }
     err = delItem(table, key);
     if (err == OK){
-        printf("Злемент с ключём \"%s\" удалён\n", key);
+        printf("Злемент с ключём %d удалён\n", key);
     }
-    free(key);
     return err;
 }
 
 Status dialogGetItem(Table *table){
     Status err;
-    char *key;
+    int key;
     printf("Введите ключ: ");
-    key = getStr(&err);
+    err = getInt(&key);
     if (err){
         return err;
     }
-    char *val = getItem(table, key, &err);
+    int val = getItem(table, key, &err);
     if (err == OK){
-        printf("Элемент с ключём \"%s\": \"%s\"\n", key, val);
-        free(val);
+        printf("Элемент с ключём %d: %d\n", key, val);
     }
-    free(key);
     return err;
 }

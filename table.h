@@ -5,8 +5,8 @@
 
 typedef struct KeySpace {
     int busy;
-    char *key;
-    char *info;
+    int key;
+    int info;
 } KeySpace;
 
 typedef struct Table {
@@ -15,12 +15,12 @@ typedef struct Table {
     size_t csize;
 } Table;
 
-Table *createTable(int msize);
-char *getItem(Table *table, char *key, Status *err);
+Table *createTable(size_t msize);
+int getItem(Table *table, int key, Status *err);
 size_t getNewMsize(size_t msize);
 void clearTable(Table *table);
 void freeTable(Table *table);
-Status insertItem(Table *table, char *key, char *info);
-Status delItem(Table *table, char *key);
+Status insertItem(Table *table, int key, int info);
+Status delItem(Table *table, int key);
 
 #endif
