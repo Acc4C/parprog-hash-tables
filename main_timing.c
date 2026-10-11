@@ -48,15 +48,15 @@ typedef struct{
     double unsuccessful;
 } searchTime;
 
-Status benchmarkSearchByElementCount(size_t msize, searchTime *searchTimePtr){
+Status defaultSearchBenchmark(size_t tableSize, size_t msize, searchTime *searchTimePtr){
     Status err;
     double start, end, sumSuccessful = 0, sumUnsuccessful = 0, plug = 0;
-    Table *table = createTable(getNewMsize(2*msize));
     int searchCount = (msize < 100000)?msize:100000;
+    Table *table = createTable(getNewMsize(tableSize));
     if (table == NULL){
         return ERR_MEMORY_ERROR;
     }
-    int *keys = (int*)malloc(msize*sizeof(int));
+    int *keys = (int*)malloc((msize>searchCount?msize:searchCount)*sizeof(int));
     if (keys == NULL){
         freeTable(table);
         return ERR_MEMORY_ERROR;
@@ -71,9 +71,10 @@ Status benchmarkSearchByElementCount(size_t msize, searchTime *searchTimePtr){
                 return err;
             }
         }
+        int step = msize/searchCount;
         start = omp_get_wtime();
-        for (int i = 0; i < searchCount; i++){
-            plug += getItem(table, keys[i], &err);
+        for (int i = 0; i < searchCount; i ++){
+            plug += getItem(table, keys[i*step], &err);
         }
         end = omp_get_wtime();
         sumSuccessful += end - start;
@@ -93,12 +94,30 @@ Status benchmarkSearchByElementCount(size_t msize, searchTime *searchTimePtr){
     return OK;
 }
 
-Status benchmarkTable(size_t msize, double *fillInTime, searchTime *tableSearchTimeByElementCount){
+Status benchmarkSearchByElementCount(size_t msize, searchTime *searchTimePtr){
+    return defaultSearchBenchmark(2*msize, msize, searchTimePtr);
+}
+
+Status benchmarkSearchByLoadFactor(size_t msize, searchTime *searchTimePtr){
+    if (msize > 4750000){
+        return OK;
+    }
+    return defaultSearchBenchmark(5000000, msize, searchTimePtr);
+}
+
+Status benchmarkTable(size_t msize, double *fillInTime, searchTime *tableSearchTimeByElementCount, searchTime *tableSearchTimeByLoadFactor){
     Status err = benchmarkInsert(msize, fillInTime);
     if (err != OK){
         return err;
     }
-    return benchmarkSearchByElementCount(msize, tableSearchTimeByElementCount);
+    err = benchmarkSearchByElementCount(msize, tableSearchTimeByElementCount);
+    if (err != OK){
+        return err;
+    }
+    if (msize > 4750000){
+        return OK;
+    }
+    return benchmarkSearchByLoadFactor(msize, tableSearchTimeByLoadFactor);
 }
 
 int main(){
@@ -114,12 +133,20 @@ int main(){
         printError(ERR_MEMORY_ERROR);
         return 0;
     }
+    searchTime *tableSearchTimesByLoadFactor = (searchTime *)malloc(10*sizeof(searchTime));
+    if (tableSearchTimesByLoadFactor == NULL){
+        free(tableFillInTimes);
+        free(tableSearchTimesByElementCount);
+        printError(ERR_MEMORY_ERROR);
+        return 0;
+    }
     for (int i = 1; i <= 10; i++){
         size_t msize = 500000*i;
-        err = benchmarkTable(msize, tableFillInTimes + i - 1, tableSearchTimesByElementCount + i - 1);
+        err = benchmarkTable(msize, tableFillInTimes + i - 1, tableSearchTimesByElementCount + i - 1, tableSearchTimesByLoadFactor + i - 1);
         if (err != OK){
             free(tableFillInTimes);
             free(tableSearchTimesByElementCount);
+            free(tableSearchTimesByLoadFactor);
             printError(err);
             return 0;
         }
@@ -135,7 +162,13 @@ int main(){
     for (int i = 1; i <= 10; i++){
         printf("%-15d %.3fmcs / %.3fmcs\n", i*500000, tableSearchTimesByElementCount[i - 1].successful*1000000, tableSearchTimesByElementCount[i - 1].unsuccessful*1000000);
     }
+    printf("\nsearch in table by load factor benchmarks:\n");
+    printf("load factor, %%  successful / unsuccessful time\n");
+    for (int i = 1; i <= 9; i++){
+        printf("%-15d %.3fmcs / %.3fmcs\n", i*10, tableSearchTimesByLoadFactor[i - 1].successful*1000000, tableSearchTimesByLoadFactor[i - 1].unsuccessful*1000000);
+    }
     free(tableFillInTimes);
     free(tableSearchTimesByElementCount);
+    free(tableSearchTimesByLoadFactor);
     return 0;
 }
