@@ -150,7 +150,7 @@ int main(){
             printError(err);
             return 0;
         }
-        printf("step %d passed\n", i);
+        printf("benchmark with %d elements passed\n", i*500000);
     }
     printf("\nfill in table benchmarks:\n");
     printf("element count   time\n");
