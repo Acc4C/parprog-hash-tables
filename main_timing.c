@@ -10,10 +10,10 @@ void generateKeys(int *keys, size_t count){
     }
 }
 
-Status benchmarkInsert(size_t msize, double *fillInTime){
+Status defaultInsertBenchmark(size_t tableSize, size_t msize, double *fillInTime){
     Status err;
     double start, end, sum = 0;
-    Table *table = createTable(getNewMsize(2*msize));
+    Table *table = createTable(getNewMsize(tableSize));
     if (table == NULL){
         return ERR_MEMORY_ERROR;
     }
@@ -41,6 +41,17 @@ Status benchmarkInsert(size_t msize, double *fillInTime){
     freeTable(table);
     free(keys);
     return OK;
+}
+
+Status benchmarkInsertByElementCount(size_t msize, double *insertTimePtr){
+    return defaultInsertBenchmark(2*msize, msize, insertTimePtr);
+}
+
+Status benchmarkInsertByLoadFactor(size_t msize, double *insertTimePtr){
+    if (msize > 4750000){
+        return OK;
+    }
+    return defaultInsertBenchmark(5000000, msize, insertTimePtr);
 }
 
 typedef struct{
@@ -105,8 +116,13 @@ Status benchmarkSearchByLoadFactor(size_t msize, searchTime *searchTimePtr){
     return defaultSearchBenchmark(5000000, msize, searchTimePtr);
 }
 
-Status benchmarkTable(size_t msize, double *fillInTime, searchTime *tableSearchTimeByElementCount, searchTime *tableSearchTimeByLoadFactor){
-    Status err = benchmarkInsert(msize, fillInTime);
+Status benchmarkTable(size_t msize, double *tableFillInTimeByElementCount, double *tableFillInTimeByLoadFactor, searchTime *tableSearchTimeByElementCount, searchTime *tableSearchTimeByLoadFactor){
+    Status err;
+    err = benchmarkInsertByElementCount(msize, tableFillInTimeByElementCount);
+    if (err != OK){
+        return err;
+    }
+    err = benchmarkInsertByLoadFactor(msize, tableFillInTimeByLoadFactor);
     if (err != OK){
         return err;
     }
@@ -114,37 +130,44 @@ Status benchmarkTable(size_t msize, double *fillInTime, searchTime *tableSearchT
     if (err != OK){
         return err;
     }
-    if (msize > 4750000){
-        return OK;
-    }
-    return benchmarkSearchByLoadFactor(msize, tableSearchTimeByLoadFactor);
+    err = benchmarkSearchByLoadFactor(msize, tableSearchTimeByLoadFactor);
+    return err;
 }
 
 int main(){
     Status err;
-    double *tableFillInTimes = (double *)malloc(10*sizeof(double));
-    if (tableFillInTimes == NULL){
+    double *tableFillInTimesByElementCount = (double *)malloc(10*sizeof(double));
+    if (tableFillInTimesByElementCount == NULL){
+        printError(ERR_MEMORY_ERROR);
+        return 0;
+    }
+    double *tableFillInTimesByLoadFactor = (double *)malloc(10*sizeof(double));
+    if (tableFillInTimesByLoadFactor == NULL){
+        free(tableFillInTimesByElementCount);
         printError(ERR_MEMORY_ERROR);
         return 0;
     }
     searchTime *tableSearchTimesByElementCount = (searchTime *)malloc(10*sizeof(searchTime));
     if (tableSearchTimesByElementCount == NULL){
-        free(tableFillInTimes);
+        free(tableFillInTimesByElementCount);
+        free(tableFillInTimesByLoadFactor);
         printError(ERR_MEMORY_ERROR);
         return 0;
     }
     searchTime *tableSearchTimesByLoadFactor = (searchTime *)malloc(10*sizeof(searchTime));
     if (tableSearchTimesByLoadFactor == NULL){
-        free(tableFillInTimes);
+        free(tableFillInTimesByElementCount);
+        free(tableFillInTimesByLoadFactor);
         free(tableSearchTimesByElementCount);
         printError(ERR_MEMORY_ERROR);
         return 0;
     }
     for (int i = 1; i <= 10; i++){
         size_t msize = 500000*i;
-        err = benchmarkTable(msize, tableFillInTimes + i - 1, tableSearchTimesByElementCount + i - 1, tableSearchTimesByLoadFactor + i - 1);
+        err = benchmarkTable(msize, tableFillInTimesByElementCount + i - 1, tableFillInTimesByLoadFactor + i - 1, tableSearchTimesByElementCount + i - 1, tableSearchTimesByLoadFactor + i - 1);
         if (err != OK){
-            free(tableFillInTimes);
+            free(tableFillInTimesByElementCount);
+            free(tableFillInTimesByLoadFactor);
             free(tableSearchTimesByElementCount);
             free(tableSearchTimesByLoadFactor);
             printError(err);
@@ -152,10 +175,15 @@ int main(){
         }
         printf("benchmark with %d elements passed\n", i*500000);
     }
-    printf("\nfill in table benchmarks:\n");
+    printf("\nfill in table by element count benchmarks:\n");
     printf("element count   time\n");
     for (int i = 1; i <= 10; i++){
-        printf("%-15d %.3fms\n", i*500000, tableFillInTimes[i - 1]*1000);
+        printf("%-15d %.3fms\n", i*500000, tableFillInTimesByElementCount[i - 1]*1000);
+    }
+    printf("\nfill in table by load factor benchmarks:\n");
+    printf("load factor, %%  time\n");
+    for (int i = 1; i <= 9; i++){
+        printf("%-15d %.3fms\n", i*10, tableFillInTimesByLoadFactor[i - 1]*1000);
     }
     printf("\nsearch in table by element count benchmarks:\n");
     printf("element count   successful / unsuccessful time\n");
@@ -167,7 +195,8 @@ int main(){
     for (int i = 1; i <= 9; i++){
         printf("%-15d %.3fmcs / %.3fmcs\n", i*10, tableSearchTimesByLoadFactor[i - 1].successful*1000000, tableSearchTimesByLoadFactor[i - 1].unsuccessful*1000000);
     }
-    free(tableFillInTimes);
+    free(tableFillInTimesByElementCount);
+    free(tableFillInTimesByLoadFactor);
     free(tableSearchTimesByElementCount);
     free(tableSearchTimesByLoadFactor);
     return 0;
